@@ -10,10 +10,11 @@ import numpy as np
 
 
 print("Generating AND, OR, XOR data sets...")
-debug = False
+debug = True
 
 n_training_sets = 5000
 n_test_sets = 5000
+n_bits = 2
 
 AND_Training_arrays = []
 OR_Training_arrays = []
@@ -25,7 +26,7 @@ XOR_Test_arrays = []
 
 for i in range(n_training_sets):
     # Make a random array of integers (example -> [0, 1, 0, 0, 1, 1, 0, 1]
-    arr = np.random.randint(2, size=8)
+    arr = np.random.randint(2, size=n_bits)
 
     # AND logic adds a new integer at end of array
     if arr[0] == 1 and arr[1] == 1:
@@ -58,7 +59,7 @@ for i in range(n_training_sets):
 
 for i in range(n_test_sets):
     # Make a random array of integers (example -> [0, 1, 0, 0, 1, 1, 0, 1]
-    arr = np.random.randint(2, size=8)
+    arr = np.random.randint(2, size=n_bits)
 
     # AND logic adds a new integer at end of array
     if arr[0] == 1 and arr[1] == 1:

@@ -9,6 +9,89 @@ import numpy as np
 import random
 
 
+def generate_data(operator="AND", n_bits=2, n_training_sets=5000, n_test_sets=5000, debug=False):
+    print("Generating AND, OR, XOR data sets...")
+
+    AND_Training_arrays = []
+    OR_Training_arrays = []
+    XOR_Training_arrays = []
+
+    AND_Test_arrays = []
+    OR_Test_arrays = []
+    XOR_Test_arrays = []
+
+    for _ in range(n_training_sets):
+        # Make a random array of integers (example -> [0, 1, 0, 0, 1, 1, 0, 1]
+        arr = np.random.randint(2, size=n_bits)
+
+        # AND logic adds a new integer at end of array
+        if arr[0] == 1 and arr[1] == 1:
+            new_AND_arr = np.append(arr, [1])
+        else:
+            new_AND_arr = np.append(arr, [0])
+        AND_Training_arrays.append(new_AND_arr)
+
+        # OR logic adds a new integer at end of array
+        if arr[0] == 1 or arr[1] == 1:
+            new_OR_arr = np.append(arr, [1])
+        else:
+            new_OR_arr = np.append(arr, [0])
+        OR_Training_arrays.append(new_OR_arr)
+
+        # XOR logic adds a new integer at end of array
+        if not (arr[0] == arr[1]):
+            new_XOR_arr = np.append(arr, [1])
+        else:
+            new_XOR_arr = np.append(arr, [0])
+        XOR_Training_arrays.append(new_XOR_arr)
+
+        # DEBUG
+        if debug:
+            print("{:-^19}".format("DEBUG"))
+            print(new_AND_arr)
+            print(new_OR_arr)
+            print(new_XOR_arr)
+
+    for _ in range(n_test_sets):
+        # Make a random array of integers (example -> [0, 1, 0, 0, 1, 1, 0, 1]
+        arr = np.random.randint(2, size=n_bits)
+
+        # AND logic adds a new integer at end of array
+        if arr[0] == 1 and arr[1] == 1:
+            new_AND_arr = np.append(arr, [1])
+        else:
+            new_AND_arr = np.append(arr, [0])
+        AND_Test_arrays.append(new_AND_arr)
+
+        # OR logic adds a new integer at end of array
+        if arr[0] == 1 or arr[1] == 1:
+            new_OR_arr = np.append(arr, [1])
+        else:
+            new_OR_arr = np.append(arr, [0])
+        OR_Test_arrays.append(new_OR_arr)
+
+        # XOR logic adds a new integer at end of array
+        if not (arr[0] == arr[1]):
+            new_XOR_arr = np.append(arr, [1])
+        else:
+            new_XOR_arr = np.append(arr, [0])
+        XOR_Test_arrays.append(new_XOR_arr)
+
+        # DEBUG
+        if debug:
+            print("{:-^19}".format("DEBUG"))
+            print(new_AND_arr)
+            print(new_OR_arr)
+            print(new_XOR_arr)
+
+    if operator == "AND":
+        return AND_Training_arrays, AND_Test_arrays
+    if operator == "OR":
+        return OR_Training_arrays, OR_Test_arrays
+    if operator == "XOR":
+        return XOR_Training_arrays, XOR_Test_arrays
+
+
 class TsetlinMachine:
     def __init__(self, number_of_clauses, number_of_features, number_of_states, s, threshold):
         self.number_of_clauses = number_of_clauses
@@ -86,7 +169,7 @@ class TsetlinMachine:
         errors = 0
         for i in range(number_of_examples):
             for j in range(self.number_of_features):
-                xi[j] = x[i, j]
+                xi[j] = x[i][j]
 
             self.calculate_clause_output(xi)
 
@@ -183,6 +266,7 @@ class TsetlinMachine:
         random_index = np.arange(number_of_examples)
 
         for epoch in range(epochs):
+            print("Epoch:", epoch)
             np.random.shuffle(random_index)
 
             for i in range(number_of_examples):
@@ -190,7 +274,7 @@ class TsetlinMachine:
                 target_class = y[example_id]
 
                 for j in range(self.number_of_features):
-                    xi[j] = x[example_id, j]
+                    xi[j] = x[example_id][j]
 
                 self.update(xi, target_class)
         return
@@ -202,37 +286,50 @@ print("Creating Tsetlin Machine")
 threshold = 15
 s = 3.9
 number_of_clauses = 2
+number_of_features = 2
 number_of_states = 100
 
-# Parameters for pattern recognition
-number_of_features = 12
 
 # Training config
 epochs = 100
 
 # Load training and test data
-training_data = np.loadtxt("data/AND_Training_Data.txt").astype(dtype=np.int32)
-test_data = np.loadtxt("data/AND_Test_Data.txt").astype(dtype=np.int32)
+# training_data = np.loadtxt("data/AND_Training_Data.txt").astype(dtype=np.int32)
+#test_data = np.loadtxt("data/AND_Test_Data.txt").astype(dtype=np.int32)
 
-# DEBUG
-print("TRAINING DATA LOOP:")
+training_data, test_data = generate_data(operator="AND", n_bits=2, n_training_sets=5000, n_test_sets=5000)
+
+print("test data", test_data)
+
+print("training:", type(training_data)  )
+x_training = []
+y_training = []
+
+x_test = []
+y_test = []
+
 for line in training_data:
-    print(line)
+    x_training.append(line[0:2])
+    y_training.append(line[2])
 
-print("TRAINING DATA:")
-# print(training_data)
 
-x_training = training_data[:, 0:8]  # Input features
-y_training = training_data[:, 8]  # target value
+for line in test_data:
+    x_test.append(line[0:2])
+    y_test.append(line[2])
 
-x_test = test_data[:, 0:8]  # Input features
-y_test = test_data[:, 8]  # Target value
+print("DEBUG")
+for i in range(10):
+    print("x:", x_test[i], "y:", y_test[i])
+
+
+
+
 
 # Initialize the Tsetlin Machine
 tsetlin_machine = TsetlinMachine(number_of_clauses, number_of_features, number_of_states, s, threshold)
 
 # Train the Tsetlin Machine
-tsetlin_machine.fit(x_training, y_training, y_training.shape[0], epochs=epochs)
+tsetlin_machine.fit(x_training, y_training, len(y_training), epochs=epochs)
 
 # Evaluate the Tsetlin Machine
-print("Accuracy on test data:", tsetlin_machine.evaluate(x_test, y_test, y_test.shape[0]))
+print("Accuracy on test data:", tsetlin_machine.evaluate(x_test, y_test, len(y_test)))
