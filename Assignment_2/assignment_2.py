@@ -7,10 +7,11 @@
 
 import numpy as np
 import random
+import sys
 
 
 def generate_data(operator="AND", n_bits=2, n_training_sets=5000, n_test_sets=5000, debug=False):
-    print("Generating AND, OR, XOR data sets...")
+    print("Generating data...")
 
     AND_Training_arrays = []
     OR_Training_arrays = []
@@ -266,7 +267,7 @@ class TsetlinMachine:
         random_index = np.arange(number_of_examples)
 
         for epoch in range(epochs):
-            print("Epoch:", epoch)
+            progress(epoch, epochs)
             np.random.shuffle(random_index)
 
             for i in range(number_of_examples):
@@ -280,56 +281,62 @@ class TsetlinMachine:
         return
 
 
+def progress(count, total, status=''):
+    bar_len = 10
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+    sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', status))
+    sys.stdout.flush()
+    if count == total - 1:
+        print("\n")
+
+
+def train(tsetlin_machine, operator):
+    # Load training and test data
+    training_data, test_data = generate_data(operator=operator, n_bits=2, n_training_sets=7000, n_test_sets=3000)
+    # Data structures
+    x_training = []
+    y_training = []
+    x_test = []
+    y_test = []
+
+    for line in training_data:
+        x_training.append(line[0:2])
+        y_training.append(line[2])
+
+    for line in test_data:
+        x_test.append(line[0:2])
+        y_test.append(line[2])
+
+    # Train the Tsetlin Machine
+    print("Starting training on", operator)
+    tsetlin_machine.fit(x_training, y_training, len(y_training), epochs=epochs)
+
+    # Evaluate the Tsetlin Machine
+    print("Accuracy on", operator, "test data:", tsetlin_machine.evaluate(x_test, y_test, len(y_test)))
+
+
 print("Creating Tsetlin Machine")
 
 # Parameters for Tsetlin Machine
-threshold = 15
-s = 3.9
+threshold = 40
+s = 10
 number_of_clauses = 2
 number_of_features = 2
 number_of_states = 100
 
-
 # Training config
-epochs = 100
-
-# Load training and test data
-# training_data = np.loadtxt("data/AND_Training_Data.txt").astype(dtype=np.int32)
-#test_data = np.loadtxt("data/AND_Test_Data.txt").astype(dtype=np.int32)
-
-training_data, test_data = generate_data(operator="AND", n_bits=2, n_training_sets=5000, n_test_sets=5000)
-
-print("test data", test_data)
-
-print("training:", type(training_data)  )
-x_training = []
-y_training = []
-
-x_test = []
-y_test = []
-
-for line in training_data:
-    x_training.append(line[0:2])
-    y_training.append(line[2])
-
-
-for line in test_data:
-    x_test.append(line[0:2])
-    y_test.append(line[2])
-
-print("DEBUG")
-for i in range(10):
-    print("x:", x_test[i], "y:", y_test[i])
-
-
-
-
+epochs = 10
 
 # Initialize the Tsetlin Machine
 tsetlin_machine = TsetlinMachine(number_of_clauses, number_of_features, number_of_states, s, threshold)
 
-# Train the Tsetlin Machine
-tsetlin_machine.fit(x_training, y_training, len(y_training), epochs=epochs)
+operators = ["AND", "OR", "XOR"]
 
-# Evaluate the Tsetlin Machine
-print("Accuracy on test data:", tsetlin_machine.evaluate(x_test, y_test, len(y_test)))
+for op in operators:
+    train(tsetlin_machine, op)
+
+
