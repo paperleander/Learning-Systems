@@ -118,7 +118,8 @@ class TsetlinMachine:
             if i % 2 == 0:
                 self.clause_sign[i] = 1
             else:
-                self.clause_sign[i] = -1
+                # NB: this is originally minus 1, but the task require both clauses to be plus
+                self.clause_sign[i] = 1
 
     # Calculate output of each clause using actions of each Tsetlin automaton.
     def calculate_clause_output(self, x):
@@ -176,12 +177,70 @@ class TsetlinMachine:
 
             output_sum = self.sum_up_clause_votes()
 
-            if output_sum >= 0 and y[i] == 0:
+            if output_sum > 0 and y[i] == 0:
                 errors += 1
-            elif output_sum < 0 and y[i] == 1:
+            elif output_sum == 0 and y[i] == 1:
                 errors += 1
 
         return 1.0 - (1.0 * errors / number_of_examples)
+
+    def update_simple(self, x, y):
+        self.calculate_clause_output(x)
+        output_sum = self.sum_up_clause_votes()
+
+        # Reset feedback
+        for j in range(self.number_of_clauses):
+            self.feedback_to_clauses[j] = 0
+
+        # Calculate feedback to clauses
+        if y == 1 and output_sum < 1:
+            for j in range(self.number_of_clauses):
+                self.feedback_to_clauses[j] += 1
+
+        if y == 0 and output_sum > 0:
+            for j in range(self.number_of_clauses):
+                self.feedback_to_clauses[j] -= 1
+
+        for j in range(self.number_of_clauses):
+            # Type I feedback (Combats False Negative Output)
+            if self.feedback_to_clauses[j] > 0:
+
+                if self.clause_output[j] == 0:
+                    for k in range(self.number_of_features):
+                        if self.ta_state[j, k, 0] > 1:
+                            self.ta_state[j, k, 0] -= 1
+                        if self.ta_state[j, k, 1] > 1:
+                            self.ta_state[j, k, 1] -= 1
+
+                if self.clause_output[j] == 1:
+                    for k in range(self.number_of_features):
+                        if x[k] == 1:
+                            if self.ta_state[j, k, 0] < self.number_of_states * 2:
+                                self.ta_state[j, k, 0] += 1
+
+                            if self.ta_state[j, k, 1] > 1:
+                                self.ta_state[j, k, 1] -= 1
+
+                        elif x[k] == 0:
+                            if self.ta_state[j, k, 1] < self.number_of_states * 2:
+                                self.ta_state[j, k, 1] += 1
+
+                            if self.ta_state[j, k, 0] > 1:
+                                self.ta_state[j, k, 0] -= 1
+
+                # Type II feedback (Combats False Positive Output)
+                elif self.feedback_to_clauses[j] < 0:
+                    if self.clause_output[j] == 1:
+                        for k in range(self.number_of_features):
+                            action_include = self.action(self.ta_state[j, k, 0])
+                            action_include_negated = self.action(self.ta_state[j, k, 1])
+
+                            if x[k] == 0:
+                                if action_include == 0 and self.ta_state[j, k, 0] < self.number_of_states * 2:
+                                    self.ta_state[j, k, 0] += 1
+                            elif x[k] == 1:
+                                if action_include_negated == 0 and self.ta_state[j, k, 1] < self.number_of_states * 2:
+                                    self.ta_state[j, k, 1] += 1
 
     def update(self, x, y):
         self.calculate_clause_output(x)
@@ -277,7 +336,8 @@ class TsetlinMachine:
                 for j in range(self.number_of_features):
                     xi[j] = x[example_id][j]
 
-                self.update(xi, target_class)
+                # self.update(xi, target_class)
+                self.update_simple(xi, target_class)
         return
 
 
@@ -296,7 +356,8 @@ def progress(count, total, status=''):
 
 def train(tsetlin_machine, operator):
     # Load training and test data
-    training_data, test_data = generate_data(operator=operator, n_bits=2, n_training_sets=200, n_test_sets=100)
+    n_bits = 2
+    training_data, test_data = generate_data(operator=operator, n_bits=n_bits, n_training_sets=200, n_test_sets=100)
     # Data structures
     x_training = []
     y_training = []
@@ -304,12 +365,12 @@ def train(tsetlin_machine, operator):
     y_test = []
 
     for line in training_data:
-        x_training.append(line[0:2])
-        y_training.append(line[2])
+        x_training.append(line[0:n_bits])
+        y_training.append(line[n_bits])
 
     for line in test_data:
-        x_test.append(line[0:2])
-        y_test.append(line[2])
+        x_test.append(line[0:n_bits])
+        y_test.append(line[n_bits])
 
     # Train the Tsetlin Machine
     print("Starting training on", operator)
@@ -322,7 +383,7 @@ def train(tsetlin_machine, operator):
 print("Creating Tsetlin Machine")
 
 # Parameters for Tsetlin Machine
-threshold = 1.8
+threshold = 1
 s = 3.9
 number_of_clauses = 2
 number_of_features = 2
@@ -340,3 +401,5 @@ for op in operators:
     train(tsetlin_machine, op)
 
 
+# clause sign - begge pluss
+# make simpler activation function (update?)
