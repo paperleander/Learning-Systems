@@ -4,3 +4,4 @@ obj
 *.min.css
 *.min.js
 *.user
+/Notes
