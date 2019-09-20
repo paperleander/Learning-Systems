@@ -296,7 +296,7 @@ def progress(count, total, status=''):
 
 def train(tsetlin_machine, operator):
     # Load training and test data
-    training_data, test_data = generate_data(operator=operator, n_bits=2, n_training_sets=7000, n_test_sets=3000)
+    training_data, test_data = generate_data(operator=operator, n_bits=2, n_training_sets=200, n_test_sets=100)
     # Data structures
     x_training = []
     y_training = []
@@ -322,8 +322,8 @@ def train(tsetlin_machine, operator):
 print("Creating Tsetlin Machine")
 
 # Parameters for Tsetlin Machine
-threshold = 40
-s = 10
+threshold = 1.8
+s = 3.9
 number_of_clauses = 2
 number_of_features = 2
 number_of_states = 100
