@@ -6,12 +6,15 @@
 
 
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
 import random
 import sys
 
 
 def generate_data(operator="AND", n_bits=2, n_training_sets=5000, n_test_sets=5000, debug=False):
-    print("Generating data...")
+    # print("Generating data...")
 
     AND_Training_arrays = []
     OR_Training_arrays = []
@@ -22,7 +25,7 @@ def generate_data(operator="AND", n_bits=2, n_training_sets=5000, n_test_sets=50
     XOR_Test_arrays = []
 
     for _ in range(n_training_sets):
-        # Make a random array of integers (example -> [0, 1, 0, 0, 1, 1, 0, 1]
+        # Make a random array of integers (example 8 bits -> [0, 1, 0, 0, 1, 1, 0, 1]
         arr = np.random.randint(2, size=n_bits)
 
         # AND logic adds a new integer at end of array
@@ -182,7 +185,7 @@ class TsetlinMachine:
             elif output_sum == 0 and y[i] == 1:
                 errors += 1
 
-        return 1.0 - (1.0 * errors / number_of_examples)
+        return (1.0 - (1.0 * errors / number_of_examples)) * 100
 
     def update_simple(self, x, y):
         self.calculate_clause_output(x)
@@ -326,7 +329,7 @@ class TsetlinMachine:
         random_index = np.arange(number_of_examples)
 
         for epoch in range(epochs):
-            progress(epoch, epochs)
+            # progress(epoch, epochs)
             np.random.shuffle(random_index)
 
             for i in range(number_of_examples):
@@ -336,8 +339,8 @@ class TsetlinMachine:
                 for j in range(self.number_of_features):
                     xi[j] = x[example_id][j]
 
-                # self.update(xi, target_class)
-                self.update_simple(xi, target_class)
+                self.update(xi, target_class)
+                # self.update_simple(xi, target_class)
         return
 
 
@@ -354,7 +357,7 @@ def progress(count, total, status=''):
         print("\n")
 
 
-def train(tsetlin_machine, operator):
+def train(operator, s, t):
     # Load training and test data
     n_bits = 2
     training_data, test_data = generate_data(operator=operator, n_bits=n_bits, n_training_sets=200, n_test_sets=100)
@@ -372,34 +375,84 @@ def train(tsetlin_machine, operator):
         x_test.append(line[0:n_bits])
         y_test.append(line[n_bits])
 
+    # Initialize the Tsetlin Machine
+    tsetlin_machine = TsetlinMachine(number_of_clauses, number_of_features, number_of_states, s, threshold)
+
     # Train the Tsetlin Machine
-    print("Starting training on", operator)
     tsetlin_machine.fit(x_training, y_training, len(y_training), epochs=epochs)
 
     # Evaluate the Tsetlin Machine
-    print("Accuracy on", operator, "test data:", tsetlin_machine.evaluate(x_test, y_test, len(y_test)))
+    accuracy = tsetlin_machine.evaluate(x_test, y_test, len(y_test))
+    print("Accuracy on", operator, "with s:", s, "and t:", t, "-->", int(accuracy))
+    return t, s, accuracy
 
 
 print("Creating Tsetlin Machine")
 
 # Parameters for Tsetlin Machine
 threshold = 1
-s = 3.9
+# s = 3.9
 number_of_clauses = 2
 number_of_features = 2
 number_of_states = 100
 
 # Training config
-epochs = 10
-
-# Initialize the Tsetlin Machine
-tsetlin_machine = TsetlinMachine(number_of_clauses, number_of_features, number_of_states, s, threshold)
+epochs = 100
 
 operators = ["AND", "OR", "XOR"]
+parameter_s = [0.5, 1, 1.5, 2, 3.5, 3.9, 4, 4.5, 5, 8, 10]
+parameter_t = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+s_col = []
+t_col = []
+a_col = []
+
+df_t = pd.DataFrame()
+df_s = pd.DataFrame()
+df_a = pd.DataFrame()
 
 for op in operators:
-    train(tsetlin_machine, op)
+    for t in parameter_t:
+        for s in parameter_s:
+            stats = train(op, s, t)
+            t_col += stats[0]
+            s_col += stats[1]
+            a_col += stats[2]
 
 
+# TODO:
 # clause sign - begge pluss
 # make simpler activation function (update?)
+
+# AND
+# 0.5   6
+# 1     7
+# 1.5   2
+# 3.5   8
+# 3.5   9
+# 4     6
+# 5     1
+# 5     3
+# 8     3
+
+# OR
+# 0.5   9
+# 1.5   10
+# 2     1
+# 2     5
+# 3.5   6
+# 3.5   8
+# 3.9   10
+# 4     2
+# 4.5   4
+# 4.5   7
+# 4.5   9
+# 5     5
+# 5     10
+# 8     10
+
+# XOR
+# 3.9   5   (0.75)
+# 4.5   3   (0.74)
+# 4.5   9   (0.72)
+# 10    3
