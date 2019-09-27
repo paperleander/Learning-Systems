@@ -5,3 +5,5 @@ obj
 *.min.js
 *.user
 /Notes
+/__pycache__
+/.pynb_checkpoints
