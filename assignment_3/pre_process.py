@@ -10,11 +10,13 @@ Functions to process newsgroup documents, including:
 source: https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908
 """
 
-# TODO: remove tabs
+# TODO: remove tabs?
 
 import os
 import re
 import string
+
+import numpy as np
 
 from sklearn.model_selection import train_test_split
 from nltk.tokenize import word_tokenize
@@ -84,7 +86,7 @@ def remove_stopwords(words):
 
 
 def remove_trash(words):
-    # Exclude first and last character.
+    # Remove quotes
     # also remove words with only 1 character.
     less_trashy = []
     for word in words:
@@ -96,10 +98,29 @@ def remove_trash(words):
     return [w for w in less_trashy if not len(w) == 1]
 
 
-def pre_process(file):
-    with open(file, "r") as f:
-        lines = f.readlines()
+def flatten(words):
+    flat = []
+    for line in words:
+        for word in line:
+            flat.append(word)
+    return flat
 
+
+def pre_process(file):
+    """
+    Process each document
+    :param file: path to file
+    :return: all words in file
+    """
+
+    # Return empty list if file could not be read (because of bad encoding).
+    try:
+        with open(file, "r") as f:
+            lines = f.readlines()
+    except:
+        return []
+
+    # Every file starts with emails and other unnecessary stuff, lets remove that
     lines = remove_metadata(lines)
 
     words_in_doc = []
@@ -110,7 +131,7 @@ def pre_process(file):
         words = convert_to_lowercase(words)
         words = remove_stopwords(words)
         words = remove_trash(words)
-        if len(words) > 0:
+        if len(words) > 0:  # Exclude empty lists, as there are a few
             words_in_doc.append(words)
 
     return words_in_doc
@@ -119,7 +140,14 @@ def pre_process(file):
 def process(documents):
     words = []
     for doc in documents:
+        print(doc)
         words.append(pre_process(doc))
+
+    # Now we have every word of each line, of each document, in a list. (well, lists in lists).
+    # To train on this data, we need to output it as (x, y): (Words in each document | Group)
+    flat = np.array(flatten(words))
+    print("Flat:", flat)
+    return np.array(flatten(words))
 
     # DEBUG
     print(">>>>>>>>>>>>>>>")
