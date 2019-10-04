@@ -10,20 +10,16 @@ Functions to process newsgroup documents, including:
 source: https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908
 """
 
-# TODO: remove tabs?
 
 import os
 import re
 import string
 
-import numpy as np
-
 from sklearn.model_selection import train_test_split
-from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
 MAIN_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join("data/20_newsgroups_stripped")
+DATA_DIR = os.path.join("data/20_newsgroups")
 
 
 def gather_thy_data():
@@ -48,7 +44,7 @@ def gather_thy_data():
             list_of_groups.append(folder)
 
     # Split training and test
-    return train_test_split(list_of_file_pathnames, list_of_groups, test_size=0.3)
+    return train_test_split(list_of_file_pathnames, list_of_groups, random_state=0, test_size=0.2)
 
 
 def split_line_to_words(line):
@@ -134,23 +130,4 @@ def pre_process(file):
         if len(words) > 0:  # Exclude empty lists, as there are a few
             words_in_doc.append(words)
 
-    return words_in_doc
-
-
-def process(documents):
-    words = []
-    for doc in documents:
-        print(doc)
-        words.append(pre_process(doc))
-
-    # Now we have every word of each line, of each document, in a list. (well, lists in lists).
-    # To train on this data, we need to output it as (x, y): (Words in each document | Group)
-    flat = np.array(flatten(words))
-    print("Flat:", flat)
-    return np.array(flatten(words))
-
-    # DEBUG
-    print(">>>>>>>>>>>>>>>")
-    for w in words:
-        print(w)
-    print(">>>>>>>>>>>>>>>")
+    return flatten(words_in_doc)
