@@ -4,6 +4,7 @@ obj
 *.min.css
 *.min.js
 *.user
+notes.txt
 /Notes
-/__pycache__
+__pycache__
 /.pynb_checkpoints
