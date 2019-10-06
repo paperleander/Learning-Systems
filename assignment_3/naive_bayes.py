@@ -15,8 +15,6 @@ class NaiveBayes:
 
     def train(self, train_x, train_y):
         """
-        Well, it "trains" on what words are in each group,
-        so that it can guess on a group given only words..?
         :param train_x: Words from each document to train on
         :param train_y: Class the document belongs to
         :return:
@@ -27,7 +25,6 @@ class NaiveBayes:
 
         # Connect data and labels together (x -> y)
         for x, y in zip(train_x, train_y):
-            # print("x", x)
             words = pre_process(x)
             for word in words:
                 self.posts[y].append(word)
