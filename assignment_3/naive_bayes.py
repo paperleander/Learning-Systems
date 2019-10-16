@@ -2,6 +2,8 @@ from collections import defaultdict
 
 import numpy as np
 
+from pre_process import process
+
 
 class NaiveBayes:
     def __init__(self):
@@ -48,7 +50,7 @@ class NaiveBayes:
 
     def make_vocabulary(self, train_x):
         for document_index, words_in_document in enumerate(train_x):
-            words_in_document = np.asarray(words_in_document)
+            words_in_document = np.asarray(process(words_in_document))
             unique_words, count_of_words = np.unique(words_in_document, return_counts=True)
             self.vocabulary[document_index] = {}
             for i, word in enumerate(unique_words):

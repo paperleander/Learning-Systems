@@ -10,7 +10,6 @@ Functions to process newsgroup documents, including:
 source: https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908
 """
 
-# TODO: remove tabs?
 
 import os
 import re
@@ -19,7 +18,6 @@ import string
 import numpy as np
 
 from sklearn.model_selection import train_test_split
-from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
 MAIN_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -148,9 +146,3 @@ def process(documents):
     flat = np.array(flatten(words))
     print("Flat:", flat)
     return np.array(flatten(words))
-
-    # DEBUG
-    print(">>>>>>>>>>>>>>>")
-    for w in words:
-        print(w)
-    print(">>>>>>>>>>>>>>>")

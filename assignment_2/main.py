@@ -38,7 +38,7 @@ def run(t, s, op):
     return tsetlin_machine.accuracy(test_x, test_y)
 
 
-operators = ["XOR", "AND", "OR"]
+operators = ["AND", "OR", "XOR"]
 for op in operators:
     for t in range(1, 10):
         acc_total = []
