@@ -1,52 +1,79 @@
 from collections import defaultdict
+import math
+import time
 
-import numpy as np
+from pre_process import pre_process
 
 from pre_process import process
 
 
 class NaiveBayes:
     def __init__(self):
-        self.vocabulary = {}
-        self.doc_to_class = defaultdict(list)
+        self.vocabulary = set()
+        self.posts = defaultdict(list)
+
+        self.p_word_given_group = {}
+        self.p_group = {}
 
     def train(self, train_x, train_y):
         """
-        BOKA:
-        1. Collect all words that occur in examples
-            Vocabulary <-- set of all distinct words in any document from examples
-        2. Calculate P(Vj) and P(Wk|Vj) probability terms:
-            for class in y:
-
-
         :param train_x: Words from each document to train on
         :param train_y: Class the document belongs to
         :return:
         """
-        # BAO:
-        # get number of training documents
-        # create vocabulary of training set
-        # zip data and labels to train
-        # get set of all classes
-        # create bow for all classes
-        # for each class
-        # for class in all_classes:
-        #   docsj: the subset of documents from Examples for which the target value is vj
-        #   compute prior for glass
-        #   calculate the sum of counts of words in current class
-        #   for every word, get the count and compute the likelihood for the class
+        # Timekeeping
+        print("Start Training.")
+        start_time = time.time()
 
-        # MIN:
         # Connect data and labels together (x -> y)
         for x, y in zip(train_x, train_y):
-            self.doc_to_class[y].append(x)
+            words = pre_process(x)
+            for word in words:
+                self.posts[y].append(word)
+                self.vocabulary.add(word)
 
+        # Calculate P(Hj) and P(Wk|Hj)
+        for group in self.posts.keys():
+            self.p_word_given_group[group] = {}
+            docs_in_group = self.posts[group]
+            self.p_group[group] = len(docs_in_group) / len(train_x)
 
+            # Count number of words
+            for word in self.vocabulary:
+                self.p_word_given_group[group][word] = 1.0
 
-        # Vocabulary (set of distinct words from all documents)
-        self.make_vocabulary(train_x)
+            for word in self.posts[group]:
+                if word in self.vocabulary:
+                    self.p_word_given_group[group][word] += 1.0
 
-        pass
+            for word in self.vocabulary:
+                self.p_word_given_group[group][word] /= len(self.posts[group]) + len(self.vocabulary)
+
+        # Timekeeping
+        timed = int(time.time() - start_time)
+        print("Training finished in ", timed, "seconds.")
+
+    def evaluate(self, test_x, test_y):
+        # Timekeeping
+        print("Start Evaluating.")
+        start_time = time.time()
+
+        correct = 0
+        for x, y in zip(test_x, test_y):
+            max_group = ""
+            max_p = 1
+            x_words = pre_process(x)
+
+            for candidate_group in self.posts.keys():
+                # P(O|H) * P(H) for each candidate group
+                p = math.log(self.p_group[candidate_group])
+                for word in x_words:
+                    if word in self.vocabulary:
+                        p += math.log(self.p_word_given_group[candidate_group][word])
+
+                if p > max_p or max_p == 1:
+                    max_p = p
+                    max_group = candidate_group
 
     def make_vocabulary(self, train_x):
         for document_index, words_in_document in enumerate(train_x):
@@ -55,9 +82,13 @@ class NaiveBayes:
             self.vocabulary[document_index] = {}
             for i, word in enumerate(unique_words):
                 self.vocabulary[document_index][word] = count_of_words[i]
-        # Is this working now? (flatten maybe?)
+            if max_group == y:
+                correct += 1
 
-        pass
+        # Timekeeping
+        timed = int(time.time() - start_time)
+        print("Evaluation finished in ", timed, "seconds.")
 
-    def evaluate(self):
-        pass
+        # Accuracy
+        accuracy = (correct/len(test_y)) * 100
+        print("Accuracy:", accuracy)

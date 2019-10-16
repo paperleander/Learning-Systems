@@ -15,16 +15,14 @@ import os
 import re
 import string
 
-import numpy as np
-
 from sklearn.model_selection import train_test_split
 from nltk.corpus import stopwords
 
 MAIN_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join("data/20_newsgroups_stripped")
+DATA_DIR = os.path.join("data/20_newsgroups")
 
 
-def gather_thy_data():
+def gather_thy_data(split):
     # List of folders (20)
     folders = [f for f in os.listdir(DATA_DIR)]
 
@@ -34,8 +32,8 @@ def gather_thy_data():
         files.append([f for f in os.listdir(os.path.join(DATA_DIR, folder))])
 
     # DEBUG
-    print("Total number of folders:", len(folders))
-    print("Total number of files:", sum(len(files[i]) for i in range(len(folders))))
+    # print("Total number of folders:", len(folders))
+    # print("Total number of files:", sum(len(files[i]) for i in range(len(folders))))
 
     # List of pathname for all files with corresponding class
     list_of_file_pathnames = []
@@ -46,7 +44,10 @@ def gather_thy_data():
             list_of_groups.append(folder)
 
     # Split training and test
-    return train_test_split(list_of_file_pathnames, list_of_groups, test_size=0.3)
+    print("split = ", split)
+    test_size = float(1 - split)
+    print("Test_size = ", test_size)
+    return train_test_split(list_of_file_pathnames, list_of_groups, random_state=0, test_size=test_size)
 
 
 def split_line_to_words(line):
@@ -145,4 +146,6 @@ def process(documents):
     # To train on this data, we need to output it as (x, y): (Words in each document | Group)
     flat = np.array(flatten(words))
     print("Flat:", flat)
-    return np.array(flatten(words))
+
+    return flatten(words_in_doc)
+
