@@ -154,9 +154,8 @@ if __name__ == '__main__':
     # Because of D-separation between Watson and Holmes given Rain, we can simplify from this:
     # P(W|H) = P(W|H,R) * P(R|H) + P(W|H,-R) * P(-R|H)                                to this:
     # P(W|H) = P(W|R) * P(R|H) + P(W|-R) * P(-R|H)
-    p_W_h = 1.0 * p_R_h + 0 * (1 - p_R_h)
-    print("Probability of Watson's grass being wet given Holmes' grass is wet:", p_W_h)  # 0.529
-    # Which is the same as probability of Rain given Holmes' grass is wet.
+    p_W_h = 1.0 * p_R_h + 0.2 * (1 - p_R_h)
+    print("Probability of Watson's grass being wet given Holmes' grass is wet:", p_W_h)  # 0.623
 
     # Probability of Rain given Watson's AND Holmes' grass is wet?
     # Because the two probabilities are not mutually exclusive, we can just use disjunction:
