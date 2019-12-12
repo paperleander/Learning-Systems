@@ -5,5 +5,6 @@ Example-implementation of assignments at machine learning course at University o
 * Assignment 1 - Tsetlin Automata
 * Assignment 2 - Tsetlin Machine
 * Assignment 3 - Naive Bayes Text Classification
+* Assignment 4 - Bayesion Network (Wet grass)
 
 To be continued..
