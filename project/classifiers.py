@@ -15,6 +15,10 @@ from sklearn.naive_bayes import BernoulliNB
 
 # Other methods
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
 
 x = []
 y = []
@@ -37,19 +41,39 @@ x = np.array(x)
 y = np.array(y)
 x = x.reshape(x.shape[0], -1)
 
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
+names = ["Gaussian Naive Bayes",
+         "Multinomial Naive Bayes",
+         "Complement Naive Bayes",
+         "Bernoulli Naive Bayes",
+         # "K Nearest Neighbors",
+         "Decision Tree",
+         "Random Forest",
+         # "Neural Net",
+         "Linear SVM",
+         "RBF SVM"]
 
-bayeser = [GaussianNB(), MultinomialNB(), ComplementNB(), BernoulliNB(), KNeighborsClassifier(3)]
+classifiers = [GaussianNB(),
+               MultinomialNB(),
+               ComplementNB(),
+               BernoulliNB(),
+               # KNeighborsClassifier(3),
+               DecisionTreeClassifier(max_depth=5),
+               RandomForestClassifier(max_depth=1000, n_estimators=10, max_features=10),
+               # MLPClassifier(alpha=1, max_iter=1000),
+               SVC(kernel="linear", C=0.025),
+               SVC(gamma=2, C=1)]
 
-for bay in bayeser:
+for i, cay in enumerate(classifiers):
     start = time.time()
-    print(bay)
-    bay.fit(x_train, y_train)
-    y_pred = bay.predict(x_test)
+    print(names[i])
+
+    cay.fit(x_train, y_train)
+    y_pred = cay.predict(x_test)
 
     total = x_test.shape[0]
     accuracy = (100 * ((y_test == y_pred).sum() / total))
-    print("Accuracy = ", round(accuracy, 3), "%")
-    print("Time: ", time.time() - start)
+    print("Accuracy = ", round(accuracy, 2), "%")
+    print("Time: ", round(time.time() - start, 3), "s")
     print("")
