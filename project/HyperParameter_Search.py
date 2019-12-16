@@ -1,14 +1,29 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
+
+# In cases where the data is not uniformly sampled,
+# radius-based neighbors classification in RadiusNeighborsClassifier can be a better choice.
+from sklearn.neighbors import RadiusNeighborsClassifier
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import AdaBoostClassifier
 
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
+
+"""
+NOTES:
+Models with n_jobs: DecisionTree
+"""
+
 
 x = []
 y = []
@@ -49,6 +64,8 @@ class GridSearchHelper:
             search = GridSearchCV(model, params, cv=5)
             search.fit(X, y)
             self.searches[key] = search
+            print('Best params for {} is {}'.format(key, self.searches[key].best_params_))
+            print("")
 
     def score(self):
         frames = []
@@ -74,21 +91,33 @@ class GridSearchHelper:
             print('Best params for {} is {}'.format(key, self.searches[key].best_params_))
 
 
+# Pick which models to run by uncommenting
 models = {
-    #'LogisticRegression': LogisticRegression(),
+    'KNearestNeighbors': KNeighborsClassifier(),
+    # 'RadiusNeighbors': RadiusNeighborsClassifier(), NOT WORKING
+    # 'SVC_linear': SVC(kernel="linear"), TAKES SEVERAL HOURS
+    'SVC_rbf': SVC(kernel="rbf"),
     'DecisionTree': DecisionTreeClassifier(),
-    'AdaBoostClassifier': AdaBoostClassifier(),
-    #'RandomForest': RandomForestClassifier()
+    'RandomForest': RandomForestClassifier(),
+    'LogisticRegression': LogisticRegression(multi_class='auto'),
+    'AdaBoostClassifier': AdaBoostClassifier()
 }
 
 parameters = {
     'LogisticRegression': {'C': [0.01, 0.1, 1, 10, 100]},
-    'DecisionTree': {'max_depth': [1, 2, 3]},
-    'AdaBoostClassifier': {'n_estimators': [16, 32]},
+    'AdaBoostClassifier': {'n_estimators': [16, 32, 64, 128, 256, 512, 1024],
+                           'learning_rate': [0.001, 0.01, 0.1]},
+    'DecisionTree': {  # 'n_estimators': [10, 50, 100, 200],
+                     'max_depth': [1, 2, 3, 5, 10, 20, 40],
+                     'min_samples_split': [0.1, 1.0, 10],
+                     'min_samples_leaf': [0.1, 0.5, 5]},
     'RandomForest': {'n_estimators': [100, 120, 300, 500, 800, 1200],
-                     'max_depth': [5, 8, 15, 25, 30, None],
-                     'min_samples_split': [2, 5, 10, 15, 100],
-                     'max_features': ['log2', 'sqrt', 'auto', None]}
+                     'max_depth': [5, 8, 15, 25, 30]},
+    'KNearestNeighbors': {'n_neighbors': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
+    'RadiusNeighbors': {'radius': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
+    'SVC_linear': {'C': [0.1, 1, 10, 100, 1000]},
+    'SVC_rbf': {'C': [0.1, 1, 10, 100, 1000],
+                'gamma': [0.1, 1, 10, 100]}
 }
 
 helper = GridSearchHelper(models, parameters)

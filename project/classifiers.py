@@ -1,5 +1,6 @@
 # Connect4
 
+
 import numpy as np
 import time
 
@@ -10,13 +11,13 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.naive_bayes import ComplementNB
 from sklearn.naive_bayes import BernoulliNB
-# from sklearn.naive_bayes import CategoricalNB
 
 # Other methods
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 
 x = []
@@ -46,10 +47,9 @@ names = ["Gaussian Naive Bayes",
          "Multinomial Naive Bayes",
          "Complement Naive Bayes",
          "Bernoulli Naive Bayes",
-         # "K Nearest Neighbors",
+         "K Nearest Neighbors",  # n_neighbors = 10
          "Decision Tree",
          "Random Forest",
-         # "Neural Net",
          "Linear SVC",
          "RBF SVC"]
 
@@ -57,19 +57,33 @@ classifiers = [GaussianNB(),
                MultinomialNB(),
                ComplementNB(),
                BernoulliNB(),
-               # KNeighborsClassifier(3),
+               KNeighborsClassifier(),
                DecisionTreeClassifier(max_depth=5),
                RandomForestClassifier(max_depth=1000, n_estimators=10, max_features=10),
-               # MLPClassifier(alpha=1, max_iter=1000),
                SVC(kernel="linear", C=0.025),
                SVC(gamma=2, C=1)]
 
-for i, cay in enumerate(classifiers):
-    start = time.time()
-    print(names[i])
+models = {'Gaussian': GaussianNB(),
+          'Multinomial': MultinomialNB(),
+          'Complement': ComplementNB(),
+          'Bernoulli': BernoulliNB(),
+          'KNearestNeighbors': KNeighborsClassifier(n_neighbors=10),
+          # 'RadiusNeighbors': RadiusNeighborsClassifier(), NOT WORKING
+          'SVC_linear': SVC(kernel="linear"),
+          'SVC_rbf': SVC(kernel="rbf"),
+          'DecisionTree': DecisionTreeClassifier(),
+          'RandomForest': RandomForestClassifier(),
+          'LogisticRegression': LogisticRegression(multi_class='auto'),
+          'AdaBoostClassifier': AdaBoostClassifier()
+          }
 
-    cay.fit(x_train, y_train)
-    y_pred = cay.predict(x_test)
+
+for name, classifier in models.items():
+    start = time.time()
+    print(name)
+
+    classifier.fit(x_train, y_train)
+    y_pred = classifier.predict(x_test)
 
     total = x_test.shape[0]
     accuracy = (100 * ((y_test == y_pred).sum() / total))

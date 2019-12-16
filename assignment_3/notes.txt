@@ -1,0 +1,56 @@
+split =  0.1
+Test_size =  0.9
+Start Training.
+Training finished in  10 seconds.
+Start Evaluating.
+Evaluation finished in  102 seconds.
+Accuracy: 67.9464384931659
+split =  0.2
+Test_size =  0.8
+Start Training.
+Training finished in  17 seconds.
+Start Evaluating.
+Evaluation finished in  84 seconds.
+Accuracy: 74.04050506313288
+split =  0.3
+Test_size =  0.7
+Start Training.
+Training finished in  28 seconds.
+Start Evaluating.
+Evaluation finished in  78 seconds.
+Accuracy: 77.64680668666952
+split =  0.4
+Test_size =  0.6
+Start Training.
+Training finished in  36 seconds.
+Start Evaluating.
+Evaluation finished in  67 seconds.
+Accuracy: 78.93157763146928
+split =  0.5
+Test_size =  0.5
+Start Training.
+Training finished in  45 seconds.
+Start Evaluating.
+Evaluation finished in  57 seconds.
+Accuracy: 79.55795579557956
+split =  0.6
+Test_size =  0.4
+Start Training.
+Training finished in  54 seconds.
+Start Evaluating.
+Evaluation finished in  46 seconds.
+Accuracy: 80.84760595074384
+split =  0.7
+Test_size =  0.30000000000000004
+Start Training.
+Training finished in  65 seconds.
+Start Evaluating.
+Evaluation finished in  34 seconds.
+Accuracy: 81.73333333333333
+split =  0.8
+Test_size =  0.19999999999999996
+Start Training.
+Training finished in  71 seconds.
+Start Evaluating.
+Evaluation finished in  22 seconds.
+Accuracy: 81.925
