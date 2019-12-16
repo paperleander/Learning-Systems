@@ -1,11 +1,23 @@
-import numpy as np
-import pandas as pd
+# Connect4
 
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import AdaBoostClassifier
+import numpy as np
+import time
 
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
+
+# Naive Bayes
+from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import ComplementNB
+from sklearn.naive_bayes import BernoulliNB
+# from sklearn.naive_bayes import CategoricalNB
+
+# Other methods
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
 
 x = []
 y = []
@@ -16,6 +28,7 @@ encode_output = {'win': 0,
                  'draw': 1,
                  'loss': 2}
 
+print("Loading data...")
 with open('data/connect-4.data') as f:
     for line in f.readlines():
         line_i = line.strip().split(',')
@@ -26,56 +39,40 @@ with open('data/connect-4.data') as f:
 x = np.array(x)
 y = np.array(y)
 x = x.reshape(x.shape[0], -1)
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5)
 
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
-class GridSearchHelper:
+names = ["Gaussian Naive Bayes",
+         "Multinomial Naive Bayes",
+         "Complement Naive Bayes",
+         "Bernoulli Naive Bayes",
+         # "K Nearest Neighbors",
+         "Decision Tree",
+         "Random Forest",
+         # "Neural Net",
+         "Linear SVC",
+         "RBF SVC"]
 
-    def __init__(self, models_, params_):
-        self.models = models_
-        self.params = params_
-        self.keys = models.keys()
-        self.searches = {}
+classifiers = [GaussianNB(),
+               MultinomialNB(),
+               ComplementNB(),
+               BernoulliNB(),
+               # KNeighborsClassifier(3),
+               DecisionTreeClassifier(max_depth=5),
+               RandomForestClassifier(max_depth=1000, n_estimators=10, max_features=10),
+               # MLPClassifier(alpha=1, max_iter=1000),
+               SVC(kernel="linear", C=0.025),
+               SVC(gamma=2, C=1)]
 
-    def run(self, X, y):
-        for key in self.keys:
-            print("Running", key)
-            model = self.models[key]
-            params = self.params[key]
-            search = GridSearchCV(model, params, cv=5)
-            search.fit(X, y)
-            self.searches[key] = search
+for i, cay in enumerate(classifiers):
+    start = time.time()
+    print(names[i])
 
-    def score(self):
-        frames = []
-        for name, search in self.searches.items():
-            frame = pd.DataFrame(search.cv_results_)
-            frame = frame.filter(regex='^(?!.*param_).*$')
-            frame['estimator'] = len(frame)*[name]
-            frames.append(frame)
-        df = pd.concat(frames)
+    cay.fit(x_train, y_train)
+    y_pred = cay.predict(x_test)
 
-        df = df.sort_values(['mean_test_score'], ascending=False)
-        df = df.reset_index()
-        df = df.drop(['rank_test_score', 'index'], 1)
-
-        columns = df.columns.tolist()
-        columns.remove('estimator')
-        columns = ['estimator'] + columns
-        df = df[columns]
-        return df
-
-
-models = {
-    'DecisionTree': DecisionTreeClassifier(),
-    'AdaBoostClassifier': AdaBoostClassifier()
-}
-
-parameters = {
-    'DecisionTree': {'max_depth': [1, 2, 3]},
-    'AdaBoostClassifier': {'n_estimators': [16, 32]}
-}
-
-helper = GridSearchHelper(models, parameters)
-helper.run(x_train, y_train)
-print(helper.score())
+    total = x_test.shape[0]
+    accuracy = (100 * ((y_test == y_pred).sum() / total))
+    print("Accuracy = ", round(accuracy, 2), "%")
+    print("Time: ", round(time.time() - start, 3), "s")
+    print("")
