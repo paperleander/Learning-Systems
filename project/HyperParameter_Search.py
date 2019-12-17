@@ -22,14 +22,25 @@ from sklearn.model_selection import GridSearchCV
 """
 NOTES:
 Models with n_jobs: DecisionTree
+AdaBoost gives 73% with 1024, and 72% with 512 estimators. The lather takes half the time.
+
+TODO:
+-Search for hyperparameters
+-Make "saturation plot"
+    - Accuracy over increasing amount of data
+-Make "learningcurve plot"
+    - Accuracy over each epoch
+    - Find epochs in models from sklearn
+-Merge Plot-code from Bao
+-Plot oversampling/undersampling
 """
 
 
 x = []
 y = []
-encode_input = {'b': [1, 0, 0],
-                'x': [0, 1, 0],
-                'o': [0, 0, 1]}
+encode_input = {'b': [0, 0],
+                'x': [1, 0],
+                'o': [0, 1]}
 encode_output = {'win': 0,
                  'draw': 1,
                  'loss': 2}
@@ -44,7 +55,7 @@ with open('data/connect-4.data') as f:
 x = np.array(x)
 y = np.array(y)
 x = x.reshape(x.shape[0], -1)
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.1)
 
 
 class GridSearchHelper:
@@ -93,14 +104,14 @@ class GridSearchHelper:
 
 # Pick which models to run by uncommenting
 models = {
-    'KNearestNeighbors': KNeighborsClassifier(),
+    # 'KNearestNeighbors': KNeighborsClassifier(),
     # 'RadiusNeighbors': RadiusNeighborsClassifier(), NOT WORKING
     # 'SVC_linear': SVC(kernel="linear"), TAKES SEVERAL HOURS
-    'SVC_rbf': SVC(kernel="rbf"),
-    'DecisionTree': DecisionTreeClassifier(),
-    'RandomForest': RandomForestClassifier(),
-    'LogisticRegression': LogisticRegression(multi_class='auto'),
-    'AdaBoostClassifier': AdaBoostClassifier()
+    # 'SVC_rbf': SVC(kernel="rbf"), TAKES SEVERAL HOURS
+    'AdaBoostClassifier': AdaBoostClassifier(),
+    # 'DecisionTree': DecisionTreeClassifier(),
+    # 'RandomForest': RandomForestClassifier(),
+    # 'LogisticRegression': LogisticRegression(multi_class='auto')
 }
 
 parameters = {
