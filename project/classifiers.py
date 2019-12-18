@@ -1,8 +1,12 @@
 # Connect4 Classifier Comparison
+from collections import defaultdict
+from time import time
+import json
 
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+import seaborn as sns; sns.set()
 
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import learning_curve
@@ -48,34 +52,76 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.1)
 
 
 models = {'Gaussian Naive Bayes': GaussianNB(),
-          # 'Multinomial Naive Bayes': MultinomialNB(),
-          # 'Complement Naive Bayes': ComplementNB(),
-          # 'Bernoulli Naive Bayes': BernoulliNB(),
-          'KNearestNeighbors': KNeighborsClassifier(n_neighbors=10),
+          'Multinomial Naive Bayes': MultinomialNB(),
+          'Complement Naive Bayes': ComplementNB(),
+          'Bernoulli Naive Bayes': BernoulliNB(),
           'DecisionTree': DecisionTreeClassifier(max_depth=20, min_samples_leaf=5, min_samples_split=10),
-          'RandomForest': RandomForestClassifier(max_depth=30, n_estimators=800),
           'LogisticRegression': LogisticRegression(C=100, multi_class='auto'),
-          'AdaBoostClassifier': AdaBoostClassifier(learning_rate=0.1, n_estimators=1024),
+          'KNearestNeighbors': KNeighborsClassifier(n_neighbors=10),
+          'RandomForest': RandomForestClassifier(max_depth=30, n_estimators=800),
+          # REDACTED BELOW
+          # 'AdaBoostClassifier': AdaBoostClassifier(learning_rate=0.1, n_estimators=1024),  #
           # 'RadiusNeighbors': RadiusNeighborsClassifier(), NOT WORKING
-          'SVC Linear': SVC(kernel="linear", C=1),
-          'SVC RBF': SVC(kernel="rbf", C=1, gamma=2),
+          # 'SVC Linear': SVC(kernel="linear", C=1),
+          # 'SVC RBF': SVC(kernel="rbf", C=1, gamma=2),
           }
 
 
-def display_accuracy(estimator):
+def get_accuracy(estimator):
     # display_accuracy
     start = time.time()
     estimator.fit(x_train, y_train)
     y_pred = estimator.predict(x_test)
     total = x_test.shape[0]
     accuracy = (100 * ((y_test == y_pred).sum() / total))
+    time_ = round(time.time() - start, 3)
     print("Accuracy = ", round(accuracy, 2), "%")
-    print("Time: ", round(time.time() - start, 3), "s")
+    print("Time: ", time_, "s")
     print("")
+    return round(accuracy, 2), time_
 
 
-def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
-                        n_jobs=None, train_sizes=np.linspace(.1, 1.0, 5)):
+def plot_accuracy(classifiers_, accuracy):
+    plt.figure(figsize=(10, 4))
+    ax = sns.barplot(x=classifiers_, y=accuracy, palette='Blues_d')
+    ax.set(xlabel='Classifiers', ylabel='Accuracy')
+    ax.set_title("Accuracy of each Classifier")
+    plt.show()
+
+
+def plot_times(classifiers_, times_):
+    plt.figure(figsize=(10, 4))
+    ax = sns.barplot(x=classifiers_, y=times_, palette='Blues_d')
+    ax.set(xlabel='Classifiers', ylabel='Time')
+    ax.set_title("Time of each Classifier")
+    plt.show()
+
+
+def plot_all_learning_curves_in_one(curves):
+    fig, axes = plt.subplots()
+    axes.set_title("Accuracy for each Classifier over Training Examples")
+
+    # set ylim?
+    axes.set_xlabel("Training examples")
+    axes.set_ylabel("Score")
+
+    # Plot learning curve
+    axes.grid()
+    print(curves)
+    for name_ in curves.keys():
+        print(name_)
+        axes.plot(curves[name_]['train_sizes'], curves[name_]['test_scores'], '-', label=name_)
+
+    # axes.fill_between(train_sizes, test_scores_mean - test_scores_std,
+    # test_scores_mean + test_scores_std, alpha=0.1, color="g")
+    # axes.plot(train_sizes, test_scores_mean, 'o-', color="g", label="Cross-validation score")
+
+    axes.legend(loc="best")
+
+    plt.show()
+
+
+def plot_learning_curve(estimator, title, X, y, ylim=None, n_jobs=None, train_sizes=np.linspace(.1, 1.0, 5)):
     """
     Generate 3 plots: the test and training learning curve, the training
     samples vs fit times curve, the fit times vs score curve.
@@ -136,6 +182,8 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
     #if axes is None:
         #_, axes = plt.subplots(1, 1, figsize=(20, 5))
 
+    cv = ShuffleSplit(n_splits=1, test_size=0.1, random_state=0)
+
     fig, axes = plt.subplots()
     axes.set_title(title)
     if ylim is not None:
@@ -155,7 +203,7 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
     axes.fill_between(train_sizes, train_scores_mean - train_scores_std,
                       train_scores_mean + train_scores_std, alpha=0.1,
                       color="g")
-    axes.plot(train_sizes, train_scores_mean, 'o-', color="g", label="Training score")
+    axes.plot(train_sizes, train_scores_mean, '-', color="g", label="Training score")
 
     # axes.fill_between(train_sizes, test_scores_mean - test_scores_std,
     # test_scores_mean + test_scores_std, alpha=0.1, color="g")
@@ -164,16 +212,40 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
     axes.legend(loc="best")
 
     plt.show()
+    return train_sizes, train_scores, test_scores
 
 
 if __name__ == "__main__":
+    classifiers = []
+    accuracies = []
+    times = []
+
+    results = defaultdict(list)
+    curves = defaultdict()
+
     for name, classifier in models.items():
         print("Running:", name)
 
-        # Accuracy
-        display_accuracy(estimator=classifier)
+        acc, time_ = get_accuracy(estimator=classifier)
+        train_sizes, train_scores, test_scores = plot_learning_curve(estimator=classifier, title=name, X=x, y=y, ylim=(0.1, 1.01), n_jobs=4)
+        curves[name] = {
+            "train_sizes": train_sizes.tolist(),
+            "train_scores": train_scores.tolist(),
+            "test_scores": test_scores.tolist()
+        }
 
-        # Plot Curves
-        cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
-        plot_learning_curve(estimator=classifier, title=name, X=x, y=y, ylim=(0.1, 1.01),
-                            cv=cv, n_jobs=4)
+        results['classifiers'].append(name)
+        results['accuracies'].append(acc)
+        results['times'].append(time_)
+
+    # plot_accuracy(results['classifiers'], results['accuracies'])
+    # plot_times(results['classifiers'], results['times'])
+    plot_all_learning_curves_in_one(curves)
+
+    outfile_path = f"results_{time.time()}.json"
+    with open(outfile_path, 'w') as fp:
+        fp.write(json.dumps(dict(results)))
+
+    outfile_path2 = f"curves_{time.time()}.json"
+    with open(outfile_path2, 'w') as fp:
+        fp.write(json.dumps(dict(curves)))
